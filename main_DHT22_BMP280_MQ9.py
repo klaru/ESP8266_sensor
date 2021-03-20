@@ -1,11 +1,10 @@
 from machine import Pin, I2C, reset, unique_id, freq
 from time import sleep, time, localtime
-from ubinascii import hexlify
 from boot import load_config
 from umqttsimple import MQTTClient
+from ubinascii import hexlify
 from ssd1306_flipped import SSD1306_I2C
-#from dht import DHT22
-from sht30 import SHT30
+from dht import DHT22
 from mq9 import MQ
 import bme280
 import ds1307
@@ -31,13 +30,11 @@ oled = SSD1306_I2C(width, height, i2c)
 bme = bme280.BME280(mode=BME280_OSAMPLE_16, i2c=i2c)
 rtc = ds1307.DS1307(i2c)
 
-#sensor_Pin = Pin(pin_sens, Pin.IN)
-#dht = DHT22(sensor_Pin)
+sensor_Pin = Pin(pin_sens, Pin.IN)
+dht = DHT22(sensor_Pin)
 
 topic1 = b'TempDHT22'
 topic2 = b'HumidDHT22'
-#topic1 = b'TempSHT30
-#topic2 = b'HumidSHT30
 topic3 = b'Press'
 topic4 = b'LPG'
 topic5 = b'CO'
@@ -46,9 +43,10 @@ topic7 = b'TempBME280'
 topic8 = b'Sens_Date'
 topic9 = b'Sens_Time'
 
-client_id = hexlify(unique_id())
-
+client_id = hexlify(unique_id())  
+    
 def connect_to_mqtt(config):
+  global client_id
   client = MQTTClient(client_id, config['mqtt']['broker'])
   client.connect()
   print('Connected to %s MQTT broker' % (config['mqtt']['broker']))
@@ -73,21 +71,19 @@ def main(config):
     while True:
         oled.fill(0)
         oled.show()
- #       dht.measure()
- #       temp_dht = dht.temperature()
- #       humidity = dht.humidity()   
-        sensor = SHT30() 
-        temp_sht, humidity = sensor.measure() 
+        dht.measure()
+        temp_dht = dht.temperature()
+        humidity = dht.humidity()       
         press_bme = bme.pressure
         pressure = float(press_bme[:-3])
         temp_bme = bme.temperature
- #       temp_bme_float = float(temp_bme[:-1])
- #       temperature = (temp_dht + 2*temp_bme_float)/3
- #       temperature = (temp_sht + 2*temp_bme_float)/3
-        temperature = float(temp_bme[:-1])
-        oled.text("T: "+str("%.1f" % temperature)+"C", 0, 0)
-        oled.text("H: "+str("%.1f" % humidity)+"%", 0, 10)
-        oled.text(str("%.0f" % pressure)+"mbar", 0, 20)
+        temp_bme_float = float(temp_bme[:-1])
+        temperature = (temp_dht + 2*temp_bme_float)/3
+        oled.text("Temp =", 0, 0)
+        oled.text(str("%.1f" % temperature)+" C", 0, 10)
+        oled.text("Humid =", 0, 20)
+        oled.text(str("%.1f" % humidity)+" %", 0, 30)
+        oled.text(str("%.0f" % pressure)+" hPa", 0, 40)
         oled.show()
         print(temperature)
         print(humidity)
@@ -124,12 +120,12 @@ def main(config):
             client.publish(topic4, str(gas_lpg), qos=QOS)
             client.publish(topic5, str(co), qos=QOS)
             client.publish(topic6, str(methane), qos=QOS)   
-            client.publish(topic7, str(temperature), qos=QOS)
+            client.publish(topic7, str(temp_bme_float), qos=QOS)
             client.publish(topic8, date_str, qos=QOS)
             client.publish(topic9, time_str, qos=QOS)   
         except OSError:
             restart_and_reconnect()        
         sleep(10)
             
-if __name__ == "__main__":
+if __name__ == "__main__":  
     main(load_config())
