@@ -7,8 +7,8 @@ from ssd1306_flipped import SSD1306_I2C
 #from dht import DHT22
 from sht30 import SHT30
 from mq9 import MQ
-import bme280
-import ds1307
+from bme280 import BME280
+from ds1307 import DS1307
 
 QOS=1
 # select GPIO pins
@@ -28,8 +28,8 @@ BME280_OSAMPLE_16 = 5
 
 i2c = I2C(scl=Pin(pin_scl), sda=Pin(pin_sda), freq=frequency)
 oled = SSD1306_I2C(width, height, i2c)
-bme = bme280.BME280(mode=BME280_OSAMPLE_16, i2c=i2c)
-rtc = ds1307.DS1307(i2c)
+bme = BME280(mode=BME280_OSAMPLE_16, i2c=i2c)
+rtc = DS1307(i2c)
 
 #sensor_Pin = Pin(pin_sens, Pin.IN)
 #dht = DHT22(sensor_Pin)
@@ -39,10 +39,9 @@ topic2 = b'HumidDHT22'
 #topic1 = b'TempSHT30
 #topic2 = b'HumidSHT30
 topic3 = b'Press'
-topic4 = b'LPG'
-topic5 = b'CO'
-topic6 = b'ME'
-topic7 = b'TempBME280'
+topic5 = b'LPG'
+topic6 = b'CO'
+topic7 = b'ME'
 topic8 = b'Sens_Date'
 topic9 = b'Sens_Time'
 
@@ -85,13 +84,13 @@ def main(config):
  #       temperature = (temp_dht + 2*temp_bme_float)/3
  #       temperature = (temp_sht + 2*temp_bme_float)/3
         temperature = float(temp_bme[:-1])
-        oled.text("T: "+str("%.1f" % temperature)+"C", 0, 0)
-        oled.text("H: "+str("%.1f" % humidity)+"%", 0, 10)
-        oled.text(str("%.0f" % pressure)+"mbar", 0, 20)
+        oled.text("T: "+str("%.1f" % temperature)+" C", 0, 0)
+        oled.text("H: "+str("%.1f" % humidity)+" %", 0, 10)
+        oled.text(str("%.0f" % pressure)+" hPa", 0, 20)
         oled.show()
-        print(temperature)
-        print(humidity)
-        print(pressure)       
+        print("Temperature: "+str("%.1f" % temperature)+" C")
+        print("Humidity: "+str("%.1f" % humidity)+" %")
+        print("Pressure: "str("%.0f" % pressure)+" hPa")       
         sleep(5)
         mq = MQ()
         perc = mq.MQPercentage()
@@ -121,10 +120,9 @@ def main(config):
             client.publish(topic1, str(temperature), qos=QOS)
             client.publish(topic2, str(humidity), qos=QOS)
             client.publish(topic3, str(pressure), qos=QOS)
-            client.publish(topic4, str(gas_lpg), qos=QOS)
-            client.publish(topic5, str(co), qos=QOS)
-            client.publish(topic6, str(methane), qos=QOS)   
-            client.publish(topic7, str(temperature), qos=QOS)
+            client.publish(topic5, str(gas_lpg), qos=QOS)
+            client.publish(topic6, str(co), qos=QOS)
+            client.publish(topic7, str(methane), qos=QOS)   
             client.publish(topic8, date_str, qos=QOS)
             client.publish(topic9, time_str, qos=QOS)   
         except OSError:
