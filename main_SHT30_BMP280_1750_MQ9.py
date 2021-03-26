@@ -9,7 +9,7 @@ from sht30 import SHT30
 from mq9 import MQ
 import bh1750fvi
 from writer_minimal import Writer
-import SF_Pixelate_8
+import Arial8
 
 QOS=1
 # select GPIO pins
@@ -63,7 +63,7 @@ def main(config):
         sleep(10)
         restart_and_reconnect()
         
-    writer = Writer(oled, SF_Pixelate_8)
+    writer = Writer(oled, Arial8)
     while True:
         oled.fill(0)
         oled.show()
@@ -109,9 +109,9 @@ def main(config):
         print("CO: "+str(float("%.2g" % co)))
         print("Methane: "+str(float("%.2g" % methane)))   
         try:        
-            client.publish(topic1, str(temperature), qos=QOS)
-            client.publish(topic2, str(humidity), qos=QOS)
-            client.publish(topic3, str(pressure), qos=QOS)
+            client.publish(topic1, str(temp_only), qos=QOS)
+            client.publish(topic2, str(humid_only), qos=QOS)
+            client.publish(topic3, str(press_only), qos=QOS)
             client.publish(topic4, str(light), qos=QOS)            
             client.publish(topic5, str(gas_lpg), qos=QOS)
             client.publish(topic6, str(co), qos=QOS)
