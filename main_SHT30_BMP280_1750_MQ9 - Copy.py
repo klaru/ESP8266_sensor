@@ -28,47 +28,11 @@ height = 48
 BME280_OSAMPLE_16 = 5
 OP_SINGLE_HRES2 = 0x21
 
-display_address1 = 0x3C
-bmx_address1 = 0x76
-light_address1 = 0x23
-display_address2 = 0x3D
-bmx_address2 = 0x77
-light_address2 = 0x5C
-
-display_present1 = False
-bmx_present1 = False
-light_present1 = False
-display_present2 = False
-bmx_present2 = False
-light_present2 = False
-
 i2c = I2C(scl=Pin(pin_scl), sda=Pin(pin_sda), freq=frequency)
-devices = i2c.scan()
+oled = SSD1306_I2C(width, height, i2c)
+sensor = BME280(mode=BME280_OSAMPLE_16, i2c=i2c)
+sensor2 = SHT30(scl_pin=pin_scl, sda_pin=pin_sda)
 
-for device in devices:
-    if device == display_address1:
-            display_present1 = True
-    if device == bmx_address1:
-            bmx_present1 = True
-    if device == light_address1:
-            light_present1 = True  
-    if device == display_address2:
-            display_present2 = True
-    if device == bmx_address2:
-            bmx_present2 = True
-    if device == light_address2:
-            light_present2 = True 
-
-if display_present1:
-    oled = SSD1306_I2C(width, height, i2c, addr=display_address1)
-if display_present2:
-    oled = SSD1306_I2C(width, height, i2c, addr=display_address2)
-sensor = SHT30(scl_pin=pin_scl, sda_pin=pin_sda)            
-if bmx_present1:
-    sensor2 = BME280(mode=BME280_OSAMPLE_16, address=bmx_address1,i2c=i2c)
-if bmx_present2:
-    sensor2 = BME280(mode=BME280_OSAMPLE_16, address=bmx_address2,i2c=i2c)
-    
 topic1 = b'TempDHT22'
 topic2 = b'HumidDHT22'
 topic3 = b'Press'
@@ -99,50 +63,41 @@ def main(config):
         sleep(10)
         restart_and_reconnect()
         
-    if (display_present1 or display_present2):
-        writer = Writer(oled, Arial8)
+    writer = Writer(oled, Arial8)
     while True:
-        if (display_present1 or display_present2):
-            oled.fill(0)
-            oled.show()
-        temperature, humidity = sensor.measure() 
+        oled.fill(0)
+        oled.show()
+        temperature, humidity = sensor2.measure() 
         temp_only = ("%.4s" % temperature)
         humid_only = ("%.4s" % humidity)
-        if (bmx_present1 or bmx_present2):
-            pressure = sensor2.pressure 
-            press_float = float(pressure[:-3])         
-            press_only = ("%.0f" % press_float)
-        if (light_present1 or light_present2):        
-            light = bh1750fvi.sample(i2c, mode=OP_SINGLE_HRES2)
-        if ((display_present1 or display_present2) and (light_present1 or light_present2) and light > 0):       
+        pressure = sensor.pressure 
+        press_float = float(pressure[:-3])         
+        press_only = ("%.0f" % press_float)       
+        light = bh1750fvi.sample(i2c, mode=OP_SINGLE_HRES2)
+        if light > 0:        
             writer.set_textpos(0,0)
             writer.printstring("T: "+temp_only+"°C")
             writer.set_textpos(12,0)
             writer.printstring("H: "+humid_only+" %")
-            if (bmx_present1 or bmx_present2):
-                writer.set_textpos(24,0)
-                writer.printstring(press_only+" hPa")
-            if (light_present1  or light_present2):
-                writer.set_textpos(36,0)
-                writer.printstring(("%.4s" % light) +" lux")
+            writer.set_textpos(24,0)
+            writer.printstring(press_only+" hPa")
+            writer.set_textpos(36,0)
+            writer.printstring(("%.4s" % light) +" lux")
             oled.show()
         print("Temperature: "+temp_only+"°C")
         print("Humidity: "+humid_only+" %")
-        if (bmx_present1 or bmx_present2):
-            print("Pressure: "+press_only+" hPa")       
-        if (light_present1 or light_present2):
-            print("Light Intensity: "+("%.4s" % light)+" lux")
+        print("Pressure: "+press_only+" hPa")       
+        print("Light Intensity: "+("%.4s" % light)+" lux")
         sleep(25)
-        if (display_present1 or display_present2):
-            oled.fill(0)
-            oled.show()       
+        oled.fill(0)
+        oled.show()       
         mq = MQ()
         perc = mq.MQPercentage()
         gas_lpg = perc["GAS_LPG"]
         co = perc["CO"]
         methane = perc["SMOKE"]        
         light = bh1750fvi.sample(i2c, mode=OP_SINGLE_HRES2)       
-        if ((display_present1 or display_present2) and (light_present1 or light_present2) and light > 0):
+        if light > 0:
             writer.set_textpos(0,0)
             writer.printstring("LP "+str(float("%.2g" % gas_lpg)))          
             writer.set_textpos(12,0)
@@ -156,19 +111,16 @@ def main(config):
         try:        
             client.publish(topic1, str(temp_only), qos=QOS)
             client.publish(topic2, str(humid_only), qos=QOS)
-            if (bmx_present1 or bmx_present2):            
-                client.publish(topic3, str(press_only), qos=QOS)
-            if (light_present1 or light_present2):
-                client.publish(topic4, str(light), qos=QOS)            
+            client.publish(topic3, str(press_only), qos=QOS)
+            client.publish(topic4, str(light), qos=QOS)            
             client.publish(topic5, str(gas_lpg), qos=QOS)
             client.publish(topic6, str(co), qos=QOS)
             client.publish(topic7, str(methane), qos=QOS)    
         except OSError:
             restart_and_reconnect()        
         sleep(25)
-        if (display_present1 or display_present2):
-            oled.fill(0)
-            oled.show()      
+        oled.fill(0)
+        oled.show()
         sleep(25)
             
 if __name__ == "__main__":
