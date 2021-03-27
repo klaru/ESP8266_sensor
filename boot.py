@@ -16,7 +16,7 @@ def load_config():
     with open('config.json') as f:
         return ujson.loads(f.read())
 
-def do_connect(config):
+def do_connect():
     sta_if = network.WLAN(network.STA_IF)
     if not sta_if.isconnected():
         print('Connecting to network...')
@@ -29,7 +29,7 @@ def do_connect(config):
         ap_if.active(False)
         print('Network config:', sta_if.ifconfig())
 
-do_connect(load_config())
+do_connect()
 
 last_message = 0
 message_interval = 5
