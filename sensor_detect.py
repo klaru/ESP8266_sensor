@@ -16,7 +16,7 @@ sgp30_addresses = [0x58]
 sgp40_addresses = [0x59]
 scd30_addresses = [0x61]
 tsl2561_addresses = [0x29,0x39,0x49]        
-ssd130x_addresses = [0x35,0x36]
+ssd130x_addresses = [0x3C,0x3D]
 ds1307_addresses = [0x68]
 
 i2c = I2C(scl=Pin(pin_scl), sda=Pin(pin_sda))

@@ -44,7 +44,7 @@ light_address2 = 0x5C
 ds1307_address = 0x68
 
 # mq9_present needs to be set Ture or False manually
-mq9_present = True
+mq9_present = False
 display_present1 = False
 ahtx0_present = False
 sht3x_present1 = False
