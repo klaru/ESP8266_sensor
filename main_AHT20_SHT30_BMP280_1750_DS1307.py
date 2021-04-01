@@ -195,8 +195,8 @@ def main(config):
             writer.printstring("ME "+str(float("%.2g" % methane))) 
             oled.show()               
         if ds1307_present: 
+            rtc.halt(False)     # power-up RTC oscillator        
             datetime = rtc.datetime()
-#            datetime = localtime()
             date_str = str(datetime[1])+"-"+str(datetime[2])+"-"+str(datetime[0])[-2:]           
             time_str = str(datetime[4])+"h:"+"{:0>{w}}".format(str(datetime[5]), w=2)+"m"
             if (display_present1 or display_present2):
