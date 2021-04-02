@@ -1,4 +1,5 @@
 from machine import Pin, I2C, reset, unique_id, freq
+from sys import platform
 from time import sleep, time, localtime
 from ubinascii import hexlify
 from boot import load_config
@@ -16,11 +17,11 @@ import Arial8
 
 QOS=1
 # select GPIO pins
-if freq() > 80000000:   # ESP32
+if platform == "esp32":
     pin_scl = 22
     pin_sda = 21
     pin_sens = 16
-else:                   # ESP8266
+elif platform == "esp8266":                 
     pin_scl = 5
     pin_sda = 4
     pin_sens = 2
