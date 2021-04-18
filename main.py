@@ -1,4 +1,4 @@
 from boot import load_config
-import main_AHT20_SHT30_BMP280_1750_DS1307
+import main_AHT20_SHT30_BMP280_1750_MQ9_DS1307
 
-main_AHT20_SHT30_BMP280_1750_DS1307.main(load_config())
+main_AHT20_SHT30_BMP280_1750_MQ9_DS1307.main(load_config())

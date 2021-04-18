@@ -13,7 +13,7 @@ from ds1307 import DS1307
 import bh1750fvi
 from writer_minimal import Writer
 import Arial8
-
+from ujson import dumps
 
 QOS=1
 # select GPIO pins
@@ -99,13 +99,11 @@ if bmx_present1:
 if ds1307_present:
     rtc = DS1307(i2c)
     
-topic1 = b'TempDHT22'
-topic2 = b'HumidDHT22'
+topic1 = b'Temp_Office'
+topic2 = b'Humid_Office'
 topic3 = b'Press'
 topic4 = b'Light'
-topic5 = b'LPG'
-topic6 = b'CO'
-topic7 = b'ME'
+topic5 = b'MQ9'
 
 client_id = hexlify(unique_id())
 
@@ -219,10 +217,9 @@ def main(config):
                 client.publish(topic3, str(press_only), qos=QOS)
             if (light_present1 or light_present2):
                 client.publish(topic4, str(light), qos=QOS)
-            if mq9_present:                
-                client.publish(topic5, str(gas_lpg), qos=QOS)
-                client.publish(topic6, str(co), qos=QOS)
-                client.publish(topic7, str(methane), qos=QOS)    
+            if mq9_present:      
+                 payload = {"LPG": gas_lpg, "CO": co, "METHANE": methane}              
+                 client.publish(topic5, dumps(payload), qos=QOS)
         except OSError:
             restart_and_reconnect()        
         sleep(25)
