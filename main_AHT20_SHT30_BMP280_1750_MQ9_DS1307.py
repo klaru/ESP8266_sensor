@@ -101,8 +101,7 @@ if ds1307_present:
     
 topic1 = b'Temp_Office'
 topic2 = b'Humid_Office'
-topic3 = b'Press'
-topic4 = b'Light'
+topic3 = b'Light_Press'
 topic5 = b'MQ9'
 
 client_id = hexlify(unique_id())
@@ -213,13 +212,18 @@ def main(config):
             client.publish(topic1, str(temp_only), qos=QOS)
             if (sht3x_present1 or sht3x_present2 or ahtx0_present):
                 client.publish(topic2, str(humid_only), qos=QOS)
-            if (bmx_present1 or bmx_present2):            
-                client.publish(topic3, str(press_only), qos=QOS)
+            if ((bmx_present1 or bmx_present2) and (light_present1 or light_present2)):      
+                payload = {"Light": light, "Press": press_only}
+                client.publish(topic3, dumps(payload), qos=QOS)
             if (light_present1 or light_present2):
-                client.publish(topic4, str(light), qos=QOS)
+                payload = {"Light": light, "Press": 0}
+                client.publish(topic3, dumps(payload), qos=QOS)
+            if (bmx_present1 or bmx_present2):
+                payload = {"Light": 0, "Press": press_only}
+                client.publish(topic3, dumps(payload), qos=QOS)                
             if mq9_present:      
-                 payload = {"LPG": gas_lpg, "CO": co, "METHANE": methane}              
-                 client.publish(topic5, dumps(payload), qos=QOS)
+                payload = {"LPG": gas_lpg, "CO": co, "METHANE": methane}              
+                client.publish(topic5, dumps(payload), qos=QOS)
         except OSError:
             restart_and_reconnect()        
         sleep(25)
