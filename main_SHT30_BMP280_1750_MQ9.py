@@ -9,7 +9,7 @@ from sht30 import SHT30
 from mq9 import MQ
 import bh1750fvi
 from writer_minimal import Writer
-import Arial8
+import Arial11
 
 QOS=1
 # select GPIO pins
@@ -100,7 +100,7 @@ def main(config):
         restart_and_reconnect()
         
     if (display_present1 or display_present2):
-        writer = Writer(oled, Arial8)
+        writer = Writer(oled, Arial11)
     while True:
         if (display_present1 or display_present2):
             oled.fill(0)
