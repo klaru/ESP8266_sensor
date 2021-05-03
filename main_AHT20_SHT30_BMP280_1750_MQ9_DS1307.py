@@ -12,7 +12,7 @@ from mq9 import MQ
 from ds1307 import DS1307
 import bh1750fvi
 from writer_minimal import Writer
-import Arial8
+import Arial11
 from ujson import dumps
 
 QOS=1
@@ -127,7 +127,7 @@ def main(config):
         restart_and_reconnect()
         
     if (display_present1 or display_present2):
-        writer = Writer(oled, Arial8)
+        writer = Writer(oled, Arial11)
     while True:
         if (display_present1 or display_present2):
             oled.fill(0)
@@ -139,11 +139,6 @@ def main(config):
             temperature, humidity = sensor.measure() 
         if (bmx_present1 or bmx_present2):
             temperature = sensor2.temperature
-        if (ahtx0_present or sht3x_present1 or sht3x_present2 or bmx_present1 or bmx_present2):            
-            temp_only = ("%.4s" % temperature)
-        if (sht3x_present1 or sht3x_present2 or ahtx0_present):
-            humid_only = ("%.4s" % humidity)
-        if (bmx_present1 or bmx_present2):
             pressure = sensor2.pressure 
             press_float = float(pressure[:-3])         
             press_only = ("%.0f" % press_float)
@@ -151,24 +146,21 @@ def main(config):
             light = bh1750fvi.sample(i2c, mode=OP_SINGLE_HRES2)
         if ((display_present1 or display_present2) and (light_present1 or light_present2) and light > 0):       
             writer.set_textpos(0,0)
-            writer.printstring("T: "+temp_only+"°C")
+            writer.printstring("Temp: %.2s°C" % temperature)
             writer.set_textpos(12,0)
-            writer.printstring("H: "+humid_only+" %")
+            writer.printstring("Humid: %.2s %%" % humidity)
             if (bmx_present1 or bmx_present2):
                 writer.set_textpos(24,0)
                 writer.printstring(press_only+" hPa")
-            if (light_present1  or light_present2):
-                writer.set_textpos(36,0)
-                writer.printstring(("%.4s" % light) +" lux")
             oled.show()
         if (ahtx0_present or sht3x_present1 or sht3x_present2 or bmx_present1 or bmx_present2):             
-            print("Temperature: "+temp_only+"°C")
+            print("Temperature: %.2s °C" % temperature)
         if (sht3x_present1 or sht3x_present2 or ahtx0_present):        
-            print("Humidity: "+humid_only+" %")
+            print("Humidity: %.2s %%" % humidity)
         if (bmx_present1 or bmx_present2):
             print("Pressure: "+press_only+" hPa")       
         if (light_present1 or light_present2):
-            print("Light Intensity: "+("%.4s" % light)+" lux")
+            print("Light Intensity: %.4s lux" % light)
         sleep(25)
         if (display_present1 or display_present2):
             oled.fill(0)
@@ -182,14 +174,15 @@ def main(config):
             print("Gas_LPG: "+str(float("%.2g" % gas_lpg)))
             print("CO: "+str(float("%.2g" % co)))
             print("Methane: "+str(float("%.2g" % methane)))             
-        if (light_present1 or light_present2): 
-            light = bh1750fvi.sample(i2c, mode=OP_SINGLE_HRES2)       
-        if ((display_present1 or display_present2) and (light_present1 or light_present2) and light > 0):
+        if (light_present1 or light_present2):     
             writer.set_textpos(0,0)
-            writer.printstring("LP "+str(float("%.2g" % gas_lpg)))          
+            writer.printstring("light:%.4s lux" % light)
+        if ((display_present1 or display_present2) and (light_present1 or light_present2) and light > 0):
             writer.set_textpos(12,0)
-            writer.printstring("CO "+str(float("%.2g" % co)))           
+            writer.printstring("LP "+str(float("%.2g" % gas_lpg)))          
             writer.set_textpos(24,0)
+            writer.printstring("CO "+str(float("%.2g" % co)))           
+            writer.set_textpos(36,0)
             writer.printstring("ME "+str(float("%.2g" % methane))) 
             oled.show()               
         if ds1307_present: 
@@ -209,9 +202,9 @@ def main(config):
             print(date_str)
             print(time_str)
         try:        
-            client.publish(topic1, str(temp_only), qos=QOS)
+            client.publish(topic1, str("%.2s" % temperature), qos=QOS)
             if (sht3x_present1 or sht3x_present2 or ahtx0_present):
-                client.publish(topic2, str(humid_only), qos=QOS)
+                client.publish(topic2, str("%.2s" % humidity), qos=QOS)
             if ((bmx_present1 or bmx_present2) and (light_present1 or light_present2)):      
                 payload = {"Light": light, "Press": press_only}
                 client.publish(topic3, dumps(payload), qos=QOS)
